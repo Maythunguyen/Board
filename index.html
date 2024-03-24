@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My board</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.9.1/font/bootstrap-icons.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+
+</head>
+<body>
+    <div id="canvasBackground" class="canvas-background">
+        <canvas id="draw" width="900" height="900"></canvas>
+    </div>
+   
+    <div class="board-selection">
+        <input type="radio" id="black" name="board-color" value="black-board" class="board-color">
+        <label for="black">Black Board</label><br><br>
+        <input type="radio" id="white" name="board-color" value="white-board" class="board-color">
+        <label for="white">White Board</label><br>
+    </div>
+    <button id="eraserButton"><img src="https://static.vecteezy.com/system/resources/previews/008/496/389/original/3d-eraser-object-with-transparent-background-png.png " alt="Draw"/></button>
+    <div class="chalk-options">
+        <button class="chalk-option" data-color="#4CAF50"><i class="bi bi-pen-fill" style="color: #4CAF50; font-size: 48px;"></i></button>
+        <button class="chalk-option" id="white-pen" data-color="#FFFFFF"><i class="bi bi-pen" style="font-size: 48px; "></i></button>
+        <button class="chalk-option" data-color="#F44336"><i class="bi bi-pen-fill" style="color: #F44336; font-size: 48px;"></i></button>
+        <button class="chalk-option" data-color="#2196F3"><i class="bi bi-pen-fill" style="color: #2196F3; font-size: 48px;"></i></button>
+    </div>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function() {
+        const canvas = document.querySelector("#draw");
+        const ctx = canvas.getContext('2d');
+        const chalkOptions = document.querySelectorAll('.chalk-option')
+        const eraserButton = document.getElementById('eraserButton');
+        const canvasBackground = document.getElementById("canvasBackground");
+        const backgroundSetting = localStorage.getItem('canvasBackground')
+        const whitePen = document.getElementById("white-pen");
+
+        if (backgroundSetting === 'black') {
+
+            canvasBackground.style.backgroundImage = "url(https://images.rawpixel.com/image_800/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvcm0xOS1jYXJkLTA1LWJsZW5kaW5nc3BhY2UuanBn.jpg)";
+            whitePen.style.color = "white";
+
+        } else {
+            canvasBackground.style.backgroundColor = "white";
+        }
+        // Ensure canvas takes up full container space
+        canvas.width = document.querySelector('.canvas-background').offsetWidth;
+        canvas.height = document.querySelector('.canvas-background').offsetHeight;
+
+        
+        // Initial canvas setup
+        ctx.fillStyle = "white";
+        // ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = "#BADA55";
+        ctx.lineJoin = "round";
+        ctx.lineCap = "round";
+        ctx.lineWidth = 10;
+
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+        let eraserEnabled = false;
+
+        function draw(e) {
+            if(!isDrawing) return;
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(e.offsetX, e.offsetY);
+            ctx.stroke();
+            [lastX, lastY] = [e.offsetX, e.offsetY];
+        }
+
+        canvas.addEventListener("mousedown", (e) => {
+            isDrawing = true;
+            [lastX, lastY] = [e.offsetX, e.offsetY];
+        });
+
+        canvas.addEventListener("mousemove", draw);
+        canvas.addEventListener("mouseup", () => isDrawing = false);
+        canvas.addEventListener("mouseout", () => isDrawing = false);
+
+       chalkOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            const color = this.getAttribute('data-color');
+            ctx.strokeStyle = color;
+        })
+       })
+
+        eraserButton.addEventListener('click', () => {
+            eraserEnabled = !eraserEnabled;
+            const imgElement = eraserButton.querySelector('img')
+            if (eraserEnabled ) {
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.lineWidth = 20;
+                imgElement.src = "https://static.vecteezy.com/system/resources/previews/008/496/389/original/3d-eraser-object-with-transparent-background-png.png";
+            } else {
+                ctx.globalCompositeOperation = 'source-over';
+                imgElement.src = "https://cdn.pixabay.com/photo/2016/03/31/15/28/draw-1293329_1280.png";
+            }
+        })
+
+
+        // Event listeners for changing background color
+        document.querySelectorAll(".board-color").forEach(item => {
+            item.addEventListener("click", function(e) {
+                const canvasBackground = document.getElementById("canvasBackground");
+                const whitePen = document.getElementById("white-pen");
+                if (e.target.id === "black") {
+                    canvasBackground.style.backgroundImage = "url(https://images.rawpixel.com/image_800/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvcm0xOS1jYXJkLTA1LWJsZW5kaW5nc3BhY2UuanBn.jpg)";
+                    canvasBackground.style.backgroundSize = "cover"; // Ensure it covers the entire div
+                    canvasBackground.style.backgroundPosition = "center";
+                    whitePen.style.color = "white";
+                    localStorage.setItem('canvasBackground', 'black')
+
+                } else if (e.target.id === "white") {
+                    canvasBackground.style.backgroundImage = ""; // Remove the background image
+                    canvasBackground.style.backgroundColor = "white";
+                    localStorage.removeItem('canvasBackground')
+                }
+            });
+        });
+    });
+
+
+</script>
+
+
+<style>
+    body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden; /* Prevents scrolling if the canvas is larger than the viewport */
+}
+
+.canvas-background {
+    border: 2px solid #000;
+    position: relative; /* This makes it a reference point for the absolutely positioned canvas */
+    width: 100%;
+    height: 100vh; /* Adjust if you want a specific height other than full viewport height */
+    background-color: white;
+}
+
+#draw {
+    position: absolute; /* Absolute positioning with top and left set to 0 ensures it covers the .canvas-background div */
+    top: 0;
+    left: 0;
+    width: 100%; /* Make the canvas fill the .canvas-background div */
+    height: 100%;
+}
+
+.board-selection {
+    position: absolute; /* You can adjust positioning to not overlay on the canvas, or consider a different layout strategy */
+    top: 20px; /* Adjust as needed */
+    left: 20px; /* Adjust as needed */
+    z-index: 10; /* Ensures the board selection is clickable and above the canvas */
+    background-color: rgba(255, 255, 255, 0.75); /* Optional: adds a slight background to the selection for visibility */
+    padding: 24px;
+    border-radius: 8px;
+}
+
+.board-selection label {
+    font-family: "Fira Sans", sans-serif;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+#eraserButton {
+    position: absolute;
+    top: 150px; /* Adjust as needed */
+    left: 20px;
+    border: none;
+    background-color: transparent; /* Make button background transparent */
+    outline: none; 
+
+}
+#eraserButton img {
+    width: 80px;
+    height: 80px;
+    cursor: pointer;
+    transition: font-size 0.3s ease;
+}
+#eraserButton img:hover {
+    width: 100px;
+    height: 100px;
+    
+}
+
+.chalk-options {
+    position: absolute;
+    top: 300px; /* Adjust as needed */
+    left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+
+}
+
+.chalk-option {
+    background-color: transparent;
+    cursor: pointer;
+    border: none;
+    transition: font-size 0.3s ease; 
+}
+.chalk-option:hover {
+    width: 70px;
+    height: 70px;
+}
+
+
+</style>
+    
+
+</body>
+</html>
